@@ -14,19 +14,25 @@ var gl;
 var ctx = {
     shaderProgram: -1, //wird unten wieder überschrieben
     aVertexPositionId: -1,
+    aVertexColorId: -1,
+    uProjMatId: -1,
+    uViewMatId: -1,
+    uWorldMatId: -1,
 };
 
 // we keep all the parameters for drawing a specific object together
-var rectangleObject = {
-    buffer: -1,
+var cubes = {
+    wireFrameCube: -1,
 };
+
+var canvas;
 
 /**
  * Startup function to be called when the body is loaded
  */
 function startup() {
     "use strict";
-    var canvas = document.getElementById("myCanvas");
+    canvas = document.getElementById("myCanvas");
     gl = createGLContext(canvas);
     initGL();
     draw();
@@ -38,6 +44,13 @@ function startup() {
 function initGL() {
     "use strict";
     ctx.shaderProgram = loadAndCompileShaders(gl, 'VertexShader.glsl', 'FragmentShader.glsl');
+
+    gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
+    gl.enable(gl.DEPTH_TEST);
+    gl.enable(gl.CULL_FACE);
+    gl.frontFace(gl.CCW);
+    gl.cullFace(gl.BACK);
+
     setUpAttributesAndUniforms();
     setUpBuffers();
 
@@ -57,6 +70,11 @@ function setUpAttributesAndUniforms(){
     "use strict";
     // finds the index of the variable in the program || überschreibt ctx.aVertexPositionId
     ctx.aVertexPositionId = gl.getAttribLocation(ctx.shaderProgram, "aVertexPosition");
+    ctx.aVertexColorId = gl.getAttribLocation(ctx.shaderProgram, "aVertexColor");
+
+    ctx.uProjMatId = gl.getUniformLocation(ctx.shaderProgram, "uProjMat");
+    ctx.uViewMatId = gl.getUniformLocation(ctx.shaderProgram, "uViewMat");
+    ctx.uWorldMatId = gl.getUniformLocation(ctx.shaderProgram, "uWorldMat");
 }
 
 /**
@@ -65,17 +83,37 @@ function setUpAttributesAndUniforms(){
 function setUpBuffers(){
     "use strict";
 
-    rectangleObject.buffer = gl.createBuffer();
+    cubes.wireFrameCube = WireFrameCube(gl, [1.0, 1.0, 1.0, 0.5]);
 
-    var vertices = [
-        -0.5,0.5,
-        0.5,0.5,
-        0.5,-0.5,
-        -0.5,-0.5,
-    ]
+    var worldMat = new Float32Array(16);
+    var identityMatrix = new Float32Array(16);
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, rectangleObject.buffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+    mat4.identity(worldMat);
+    mat4.identity(identityMatrix);
+    mat4.rotate(worldMat, identityMatrix, glMatrix.toRadian(25), [0, 0, 1]);
+    mat4.rotate(worldMat, worldMat, glMatrix.toRadian(25), [1, 0, 0]);
+
+    var viewMat = mat4.create();
+    mat4.lookAt(
+        viewMat,
+        [0, -5, 0], // eye
+        [0, 0, 0], // fovy / center
+        [0, 0, 1], // up
+    );
+
+    var projMat = mat4.create();
+    mat4.perspective(
+        projMat,
+        glMatrix.toRadian(45), // fovy
+        canvas.clientWidth / canvas.clientHeight,  // aspect
+        0.1, // near
+        1000, // far
+    );
+
+    // set matrices for vertex shader
+    gl.uniformMatrix4fv(ctx.uWorldMatId, false, worldMat);
+    gl.uniformMatrix4fv(ctx.uViewMatId, false, viewMat);
+    gl.uniformMatrix4fv(ctx.uProjMatId, false, projMat);
 }
 
 /**
@@ -84,13 +122,10 @@ function setUpBuffers(){
 function draw() {
     "use strict";
     console.log("Drawing");
-    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
     // add drawing routines here
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, rectangleObject.buffer);
-    gl.vertexAttribPointer(ctx.aVertexPositionId, 2, gl.FLOAT, false, 0,0);
-    gl.enableVertexAttribArray(ctx.aVertexPositionId);
+    cubes.wireFrameCube.draw(gl, ctx.aVertexPositionId, ctx.aVertexColorId);
 
-    gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
     console.log("done");
 }
