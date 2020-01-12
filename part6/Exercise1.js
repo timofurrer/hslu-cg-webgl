@@ -16,11 +16,16 @@ var ctx = {
     aVertexPositionId: -1,
     aVertexColorId: -1,
     aVertexTexCoordId: -1,
+    aVertexNormalId: -1,
     uProjMatId: -1,
     uViewMatId: -1,
+    uNormalViewMatId: -1,
     uWorldMatId: -1,
     uSamplerId: -1,
     uEnableTextureId: -1,
+    uEnableLightingId: -1,
+    uLightPositionId: -1,
+    uLightColorId: -1,
 };
 
 // we keep all the parameters for drawing a specific object together
@@ -80,13 +85,19 @@ function setUpAttributesAndUniforms(){
     ctx.aVertexPositionId = gl.getAttribLocation(ctx.shaderProgram, "aVertexPosition");
     ctx.aVertexColorId = gl.getAttribLocation(ctx.shaderProgram, "aVertexColor");
     ctx.aVertexTexCoordId = gl.getAttribLocation(ctx.shaderProgram, "aVertexTexCoord");
+    ctx.aVertexNormalId = gl.getAttribLocation(ctx.shaderProgram, "aVertexNormal");
 
     ctx.uProjMatId = gl.getUniformLocation(ctx.shaderProgram, "uProjMat");
     ctx.uViewMatId = gl.getUniformLocation(ctx.shaderProgram, "uViewMat");
+    ctx.uNormalViewMatId = gl.getUniformLocation(ctx.shaderProgram, "uNormalViewMat");
     ctx.uWorldMatId = gl.getUniformLocation(ctx.shaderProgram, "uWorldMat");
 
     ctx.uSamplerId = gl.getUniformLocation(ctx.shaderProgram, "uSampler");
     ctx.uEnableTextureId = gl.getUniformLocation(ctx.shaderProgram, "uEnableTexture");
+
+    ctx.uEnableLightingId = gl.getUniformLocation(ctx.shaderProgram, "uEnableLighting");
+    ctx.uLightPositionId = gl.getUniformLocation(ctx.shaderProgram, "uLightPosition");
+    ctx.uLightColorId = gl.getUniformLocation(ctx.shaderProgram, "uLightColor");
 }
 
 function loadTexture() {
@@ -115,7 +126,15 @@ function loadTexture() {
 function setUpBuffers(){
     "use strict";
 
-    cubes.wireFrameCube = WireFrameCube(gl, [1.0, 1.0, 1.0, 0.5]);
+    cubes.wireFrameCube = SolidCube(
+        gl,
+        [1.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0],
+        [0.0, 0.0, 1.0],
+        [1.0, 1.0, 0.0],
+        [0.0, 1.0, 1.0],
+        [1.0, 0.0, 1.0]
+    );
 
     var viewMat = mat4.create();
     mat4.lookAt(
@@ -124,6 +143,9 @@ function setUpBuffers(){
         [0, 0, 0], // fovy / center
         [0, 0, 1], // up
     );
+
+    var normalViewMat = mat3.create();
+    mat3.normalFromMat4(normalViewMat , viewMat);
 
     var projMat = mat4.create();
     mat4.perspective(
@@ -136,6 +158,7 @@ function setUpBuffers(){
 
     // set matrices for vertex shader
     gl.uniformMatrix4fv(ctx.uViewMatId, false, viewMat);
+    gl.uniformMatrix3fv(ctx.uNormalViewMatId , false , normalViewMat);
     gl.uniformMatrix4fv(ctx.uProjMatId, false, projMat);
 }
 
@@ -159,6 +182,10 @@ function draw() {
     gl.uniform1i(ctx.uEnableTextureId, 0);
     gl.uniform1i(ctx.uSamplerId, 0);
 
+    gl.uniform1i(ctx.uEnableLightingId, 1);
+    gl.uniform3fv(ctx.uLightPositionId, [20, 20, 0]);
+    gl.uniform3fv(ctx.uLightColorId, [1.0, 1.0, 1.0]);
+
     var angle;
     var loop = function() {
         angle = performance.now() / 1000 / 6 * 2 * Math.PI;
@@ -175,7 +202,7 @@ function draw() {
         gl.bindTexture(gl.TEXTURE_2D, lennaTex.texture);
         gl.activeTexture(gl.TEXTURE0);
 
-        cubes.wireFrameCube.draw(gl, ctx.aVertexPositionId, ctx.aVertexColorId, ctx.aVertexTexCoordId);
+        cubes.wireFrameCube.draw(gl, ctx.aVertexPositionId, ctx.aVertexNormalId, ctx.aVertexColorId, ctx.aVertexTexCoordId);
 
         requestAnimationFrame(loop);
     }

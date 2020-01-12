@@ -98,7 +98,7 @@ function WireFrameCube(gl, color) {
         bufferEdges: defineEdges(gl),
         color: color,
 
-        draw: function(gl, aVertexPositionId, aVertexColorId, aVertexTexCoordId) {
+        draw: function(gl, aVertexPositionId, aVertexNormalId, aVertexColorId, aVertexTexCoordId) {
             gl.bindBuffer(gl.ARRAY_BUFFER, this.bufferVertices);
             gl.vertexAttribPointer(aVertexPositionId, 3, gl.FLOAT, false, 8 * Float32Array.BYTES_PER_ELEMENT, 0);
             gl.enableVertexAttribArray(aVertexPositionId);
