@@ -14,12 +14,13 @@ var gl;
 var ctx = {
     shaderProgram: -1, //wird unten wieder überschrieben
     aVertexPositionId: -1,
-    uColorId: -1,
+    aVertexColorId: -1,
 };
 
 // we keep all the parameters for drawing a specific object together
 var rectangleObject = {
     buffer: -1,
+    colorBuffer: -1,
 };
 
 /**
@@ -58,7 +59,7 @@ function setUpAttributesAndUniforms(){
     "use strict";
     // finds the index of the variable in the program || überschreibt ctx.aVertexPositionId
     ctx.aVertexPositionId = gl.getAttribLocation(ctx.shaderProgram, "aVertexPosition");
-    ctx.uColorId = gl.getUniformLocation(ctx.shaderProgram, "uColor");
+    ctx.aVertexColorId = gl.getAttribLocation(ctx.shaderProgram, "aVertexColor");
 }
 
 /**
@@ -78,6 +79,21 @@ function setUpBuffers(){
 
     gl.bindBuffer(gl.ARRAY_BUFFER, rectangleObject.buffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+
+    rectangleObject.colorBuffer = gl.createBuffer();
+
+    // NOTE(TF) Aufgabe 2 / Frage:
+    //      The pixel coloring between the vertices is done by interpolating
+    //      the vertices colors and thus, generate a gradient.
+    var vertices_colors = [
+        0.85, 0.75, 0.75,
+        0.75, 0.85, 0.75,
+        0.85, 0.85, 0.75,
+        0.85, 0.75, 0.85,
+    ];
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, rectangleObject.colorBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices_colors), gl.STATIC_DRAW);
 }
 
 /**
@@ -93,7 +109,9 @@ function draw() {
     gl.vertexAttribPointer(ctx.aVertexPositionId, 2, gl.FLOAT, false, 0,0);
     gl.enableVertexAttribArray(ctx.aVertexPositionId);
 
-    gl.uniform3f(ctx.uColorId, 0.85, 0.75, 0.75);
+    gl.bindBuffer(gl.ARRAY_BUFFER, rectangleObject.colorBuffer);
+    gl.vertexAttribPointer(ctx.aVertexColorId, 3, gl.FLOAT, false, 0,0);
+    gl.enableVertexAttribArray(ctx.aVertexColorId);
 
     gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
     console.log("done");
