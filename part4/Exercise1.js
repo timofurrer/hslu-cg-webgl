@@ -85,14 +85,6 @@ function setUpBuffers(){
 
     cubes.wireFrameCube = WireFrameCube(gl, [1.0, 1.0, 1.0, 0.5]);
 
-    var worldMat = new Float32Array(16);
-    var identityMatrix = new Float32Array(16);
-
-    mat4.identity(worldMat);
-    mat4.identity(identityMatrix);
-    mat4.rotate(worldMat, identityMatrix, glMatrix.toRadian(25), [0, 0, 1]);
-    mat4.rotate(worldMat, worldMat, glMatrix.toRadian(25), [1, 0, 0]);
-
     var viewMat = mat4.create();
     mat4.lookAt(
         viewMat,
@@ -111,7 +103,6 @@ function setUpBuffers(){
     );
 
     // set matrices for vertex shader
-    gl.uniformMatrix4fv(ctx.uWorldMatId, false, worldMat);
     gl.uniformMatrix4fv(ctx.uViewMatId, false, viewMat);
     gl.uniformMatrix4fv(ctx.uProjMatId, false, projMat);
 }
@@ -122,10 +113,33 @@ function setUpBuffers(){
 function draw() {
     "use strict";
     console.log("Drawing");
-    gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
-    // add drawing routines here
 
-    cubes.wireFrameCube.draw(gl, ctx.aVertexPositionId, ctx.aVertexColorId);
+    var worldMat = new Float32Array(16);
+    var identityMatrix = new Float32Array(16);
+    var xRotation = new Float32Array(16);
+    var zRotation = new Float32Array(16);
 
+    mat4.identity(worldMat);
+    mat4.identity(identityMatrix);
+
+    var angle;
+    var loop = function() {
+        angle = performance.now() / 1000 / 6 * 2 * Math.PI;
+
+        // rotate
+        mat4.rotate(xRotation, identityMatrix, angle, [1, 0, 0]);
+        mat4.rotate(zRotation, identityMatrix, angle / 4, [0, 0, 1]);
+
+        mat4.mul(worldMat, xRotation, zRotation);
+
+        gl.uniformMatrix4fv(ctx.uWorldMatId, false, worldMat);
+
+        gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
+
+        cubes.wireFrameCube.draw(gl, ctx.aVertexPositionId, ctx.aVertexColorId);
+
+        requestAnimationFrame(loop);
+    }
+    requestAnimationFrame(loop);
     console.log("done");
 }
