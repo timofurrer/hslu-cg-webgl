@@ -1,9 +1,9 @@
 attribute vec2 aVertexPosition;
-attribute vec3 aVertexColor;
+attribute vec2 aVertexTexCoord;
 
-varying vec3 fragColor;
+varying vec2 vTexCoord;
 
 void main () {
-    fragColor = aVertexColor;
+    vTexCoord = aVertexTexCoord;
     gl_Position = vec4(aVertexPosition, 0, 1);
 }

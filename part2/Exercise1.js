@@ -14,12 +14,18 @@ var gl;
 var ctx = {
     shaderProgram: -1, //wird unten wieder überschrieben
     aVertexPositionId: -1,
-    aVertexColorId: -1,
+    aVertexTexCoordId: -1,
+    uSampler2DId: -1,
 };
 
 // we keep all the parameters for drawing a specific object together
 var rectangleObject = {
     buffer: -1,
+    texBuffer: -1,
+};
+
+var lennaTex = {
+    texture: {},
 };
 
 /**
@@ -41,6 +47,7 @@ function initGL() {
     ctx.shaderProgram = loadAndCompileShaders(gl, 'VertexShader.glsl', 'FragmentShader.glsl');
     setUpAttributesAndUniforms();
     setUpBuffers();
+    loadTexture();
 
     // set the clear color here
     // NOTE(TF) Aufgabe 1 / Frage:
@@ -58,7 +65,26 @@ function setUpAttributesAndUniforms(){
     "use strict";
     // finds the index of the variable in the program || überschreibt ctx.aVertexPositionId
     ctx.aVertexPositionId = gl.getAttribLocation(ctx.shaderProgram, "aVertexPosition");
-    ctx.aVertexColorId = gl.getAttribLocation(ctx.shaderProgram, "aVertexColor");
+    ctx.aVertexTexCoordId = gl.getAttribLocation(ctx.shaderProgram, "aVertexTexCoord");
+    ctx.uSampler2DId = gl.getUniformLocation(ctx.shaderProgram, "uSampler");
+}
+
+function loadTexture() {
+    var image = new Image();
+    lennaTex.texture = gl.createTexture();
+    image.onload = function() {
+        gl.bindTexture(gl.TEXTURE_2D, lennaTex.texture);
+
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+        gl.generateMipmap(gl.TEXTURE_2D);
+        gl.bindTexture(gl.TEXTURE_2D, null);
+
+        draw();
+    };
+    image.src = "lena512.png";
 }
 
 /**
@@ -70,15 +96,29 @@ function setUpBuffers(){
     rectangleObject.buffer = gl.createBuffer();
 
     var vertices = [
-        // X, Y coords     // R, G, B
-        -0.5,0.5,          0.85, 0.75, 0.75,
-        0.5,0.5,           0.75, 0.85, 0.75,
-        0.5,-0.5,          0.85, 0.85, 0.75,
-        -0.5,-0.5,         0.85, 0.75, 0.85,
+        // X, Y coords
+        -0.5,0.5,
+        0.5,0.5,
+        0.5,-0.5,
+        -0.5,-0.5,
     ]
 
     gl.bindBuffer(gl.ARRAY_BUFFER, rectangleObject.buffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+
+
+    // Texture Coordinate Setup
+    rectangleObject.texBuffer = gl.createBuffer();
+
+    var texCoords = [
+        0.0, 1.0,
+        1.0, 1.0,
+        1.0, 0.0,
+        0.0, 0.0
+    ];
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, rectangleObject.texBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(texCoords), gl.STATIC_DRAW);
 }
 
 /**
@@ -91,12 +131,16 @@ function draw() {
     // add drawing routines here
 
     gl.bindBuffer(gl.ARRAY_BUFFER, rectangleObject.buffer);
-
-    gl.vertexAttribPointer(ctx.aVertexPositionId, 2, gl.FLOAT, false, 5 * Float32Array.BYTES_PER_ELEMENT, 0);
-    gl.vertexAttribPointer(ctx.aVertexColorId, 3, gl.FLOAT, false, 5 * Float32Array.BYTES_PER_ELEMENT, 2 * Float32Array.BYTES_PER_ELEMENT);
-
+    gl.vertexAttribPointer(ctx.aVertexPositionId, 2, gl.FLOAT, false, 2 * Float32Array.BYTES_PER_ELEMENT, 0);
     gl.enableVertexAttribArray(ctx.aVertexPositionId);
-    gl.enableVertexAttribArray(ctx.aVertexColorId);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, rectangleObject.texBuffer);
+    gl.vertexAttribPointer(ctx.aVertexTexCoordId, 2, gl.FLOAT, false, 2 * Float32Array.BYTES_PER_ELEMENT, 0);
+    gl.enableVertexAttribArray(ctx.aVertexTexCoordId);
+
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, lennaTex.texture);
+    gl.uniform1i(ctx.uSampler2DId, 0);
 
     gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
     console.log("done");
