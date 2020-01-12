@@ -91,6 +91,6 @@ function draw() {
     gl.vertexAttribPointer(ctx.aVertexPositionId, 2, gl.FLOAT, false, 0,0);
     gl.enableVertexAttribArray(ctx.aVertexPositionId);
 
-    gl.drawArrays(gl.TRIANGLES_FAN, 0,4);
+    gl.drawArrays(gl.LINE_LOOP, 0,4);
     console.log("done");
 }
