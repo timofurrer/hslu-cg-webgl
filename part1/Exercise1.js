@@ -71,10 +71,17 @@ function setUpBuffers(){
     rectangleObject.buffer = gl.createBuffer();
 
     var vertices = [
+        // first rectangle
         -0.5,0.5,
         0.5,0.5,
         0.5,-0.5,
-        -0.5,-0.5
+        -0.5,-0.5,
+
+        // second rectangle
+        -0.25,0.25,
+        0.25,0.25,
+        0.25,-0.25,
+        -0.25,-0.25
     ]
 
     gl.bindBuffer(gl.ARRAY_BUFFER, rectangleObject.buffer);
@@ -85,10 +92,17 @@ function setUpBuffers(){
     rectangleObject.colorBuffer = gl.createBuffer();
 
     var color = [
+        // first rectangle
         1.0, 0.0, 0.0,
         1.0, 0.0, 0.0,
         1.0, 0.0, 0.0,
         1.0, 0.0, 0.0,
+
+        // second rectangle
+        1.0, 0.0, 0.0,
+        0.0, 1.0, 0.0,
+        0.0, 0.0, 1.0,
+        1.0, 1.0, 1.0,
     ];
 
     gl.bindBuffer(gl.ARRAY_BUFFER, rectangleObject.colorBuffer);
@@ -112,6 +126,9 @@ function draw() {
     gl.vertexAttribPointer(ctx.aVertexColorId, 3, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(ctx.aVertexColorId);
 
+    // draw first rectangle
     gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
+    // draw second rectangle
+    gl.drawArrays(gl.TRIANGLE_FAN, 4, 4);
     console.log("done");
 }
