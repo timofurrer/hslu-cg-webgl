@@ -121,6 +121,8 @@ function draw() {
 
     mat4.identity(worldMat);
     mat4.identity(identityMatrix);
+    mat4.identity(xRotation)
+    mat4.identity(zRotation)
 
     var angle;
     var loop = function() {
@@ -128,14 +130,12 @@ function draw() {
 
         // rotate
         mat4.rotate(xRotation, identityMatrix, angle, [1, 0, 0]);
-        mat4.rotate(zRotation, identityMatrix, angle / 4, [0, 0, 1]);
-
+        mat4.rotate(zRotation, identityMatrix, angle / 2, [0, 0, 1]);
         mat4.mul(worldMat, xRotation, zRotation);
 
         gl.uniformMatrix4fv(ctx.uWorldMatId, false, worldMat);
 
         gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
-
         cubes.wireFrameCube.draw(gl, ctx.aVertexPositionId, ctx.aVertexColorId);
 
         requestAnimationFrame(loop);

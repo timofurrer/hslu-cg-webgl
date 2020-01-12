@@ -1,13 +1,13 @@
 attribute vec3 aVertexPosition;
-attribute vec4 aVertexColor;
+attribute vec3 aVertexColor;
 
 uniform mat4 uProjMat;
 uniform mat4 uViewMat;
 uniform mat4 uWorldMat;
 
-varying vec4 fragColor;
+varying vec3 fragColor;
 
 void main () {
-    fragColor = vec4(1.0, 1.0, 1.0, 1.0);
+    fragColor = aVertexColor;
     gl_Position = uProjMat * uViewMat * uWorldMat * vec4(aVertexPosition, 1);
 }
