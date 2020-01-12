@@ -20,7 +20,6 @@ var ctx = {
 // we keep all the parameters for drawing a specific object together
 var rectangleObject = {
     buffer: -1,
-    colorBuffer: -1,
 };
 
 /**
@@ -71,29 +70,15 @@ function setUpBuffers(){
     rectangleObject.buffer = gl.createBuffer();
 
     var vertices = [
-        -0.5,0.5,
-        0.5,0.5,
-        0.5,-0.5,
-        -0.5,-0.5,
+        // X, Y coords     // R, G, B
+        -0.5,0.5,          0.85, 0.75, 0.75,
+        0.5,0.5,           0.75, 0.85, 0.75,
+        0.5,-0.5,          0.85, 0.85, 0.75,
+        -0.5,-0.5,         0.85, 0.75, 0.85,
     ]
 
     gl.bindBuffer(gl.ARRAY_BUFFER, rectangleObject.buffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-
-    rectangleObject.colorBuffer = gl.createBuffer();
-
-    // NOTE(TF) Aufgabe 2 / Frage:
-    //      The pixel coloring between the vertices is done by interpolating
-    //      the vertices colors and thus, generate a gradient.
-    var vertices_colors = [
-        0.85, 0.75, 0.75,
-        0.75, 0.85, 0.75,
-        0.85, 0.85, 0.75,
-        0.85, 0.75, 0.85,
-    ];
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, rectangleObject.colorBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices_colors), gl.STATIC_DRAW);
 }
 
 /**
@@ -106,11 +91,11 @@ function draw() {
     // add drawing routines here
 
     gl.bindBuffer(gl.ARRAY_BUFFER, rectangleObject.buffer);
-    gl.vertexAttribPointer(ctx.aVertexPositionId, 2, gl.FLOAT, false, 0,0);
-    gl.enableVertexAttribArray(ctx.aVertexPositionId);
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, rectangleObject.colorBuffer);
-    gl.vertexAttribPointer(ctx.aVertexColorId, 3, gl.FLOAT, false, 0,0);
+    gl.vertexAttribPointer(ctx.aVertexPositionId, 2, gl.FLOAT, false, 5 * Float32Array.BYTES_PER_ELEMENT, 0);
+    gl.vertexAttribPointer(ctx.aVertexColorId, 3, gl.FLOAT, false, 5 * Float32Array.BYTES_PER_ELEMENT, 2 * Float32Array.BYTES_PER_ELEMENT);
+
+    gl.enableVertexAttribArray(ctx.aVertexPositionId);
     gl.enableVertexAttribArray(ctx.aVertexColorId);
 
     gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
