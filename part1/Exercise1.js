@@ -42,8 +42,11 @@ function initGL() {
     setUpBuffers();
 
     // set the clear color here
-    gl.clearColor(.2,.2,.2,1); //-> damit wird alles übermalen (erst wenn clear)
-    
+    // NOTE(TF) Aufgabe 1 / Frage:
+    //     clearColor() only sets the color for the buffer, but doesn't actually do anything else.
+    //     clear() has to be called in order for the color to be painted.
+    gl.clearColor(0.8, 0.8, 0.8, 1.0);
+
     // add more necessary commands here
 }
 
