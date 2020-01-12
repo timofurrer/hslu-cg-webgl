@@ -15,14 +15,21 @@ var ctx = {
     shaderProgram: -1, //wird unten wieder überschrieben
     aVertexPositionId: -1,
     aVertexColorId: -1,
+    aVertexTexCoordId: -1,
     uProjMatId: -1,
     uViewMatId: -1,
     uWorldMatId: -1,
+    uSamplerId: -1,
+    uEnableTextureId: -1,
 };
 
 // we keep all the parameters for drawing a specific object together
 var cubes = {
     wireFrameCube: -1,
+};
+
+var lennaTex = {
+    texture: {},
 };
 
 var canvas;
@@ -35,7 +42,7 @@ function startup() {
     canvas = document.getElementById("myCanvas");
     gl = createGLContext(canvas);
     initGL();
-    draw();
+    loadTexture();
 }
 
 /**
@@ -53,6 +60,7 @@ function initGL() {
 
     setUpAttributesAndUniforms();
     setUpBuffers();
+    loadTexture();
 
     // set the clear color here
     // NOTE(TF) Aufgabe 1 / Frage:
@@ -71,10 +79,34 @@ function setUpAttributesAndUniforms(){
     // finds the index of the variable in the program || überschreibt ctx.aVertexPositionId
     ctx.aVertexPositionId = gl.getAttribLocation(ctx.shaderProgram, "aVertexPosition");
     ctx.aVertexColorId = gl.getAttribLocation(ctx.shaderProgram, "aVertexColor");
+    ctx.aVertexTexCoordId = gl.getAttribLocation(ctx.shaderProgram, "aVertexTexCoord");
 
     ctx.uProjMatId = gl.getUniformLocation(ctx.shaderProgram, "uProjMat");
     ctx.uViewMatId = gl.getUniformLocation(ctx.shaderProgram, "uViewMat");
     ctx.uWorldMatId = gl.getUniformLocation(ctx.shaderProgram, "uWorldMat");
+
+    ctx.uSamplerId = gl.getUniformLocation(ctx.shaderProgram, "uSampler");
+    ctx.uEnableTextureId = gl.getUniformLocation(ctx.shaderProgram, "uEnableTexture");
+}
+
+function loadTexture() {
+    var image = new Image();
+    lennaTex.texture = gl.createTexture();
+    image.onload = function() {
+        gl.bindTexture(gl.TEXTURE_2D, lennaTex.texture);
+
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        //gl.generateMipmap(gl.TEXTURE_2D);
+        gl.bindTexture(gl.TEXTURE_2D, null);
+
+        draw();
+    };
+    image.src = "lena512.png";
 }
 
 /**
@@ -124,19 +156,26 @@ function draw() {
     mat4.identity(xRotation)
     mat4.identity(zRotation)
 
+    gl.uniform1i(ctx.uEnableTextureId, 1);
+    gl.uniform1i(ctx.uSamplerId, 0);
+
     var angle;
     var loop = function() {
         angle = performance.now() / 1000 / 6 * 2 * Math.PI;
 
         // rotate
         mat4.rotate(xRotation, identityMatrix, angle, [1, 0, 0]);
-        mat4.rotate(zRotation, identityMatrix, angle / 2, [0, 0, 1]);
+        mat4.rotate(zRotation, identityMatrix, angle / 4, [0, 0, 1]);
         mat4.mul(worldMat, xRotation, zRotation);
 
         gl.uniformMatrix4fv(ctx.uWorldMatId, false, worldMat);
 
         gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
-        cubes.wireFrameCube.draw(gl, ctx.aVertexPositionId, ctx.aVertexColorId);
+
+        gl.bindTexture(gl.TEXTURE_2D, lennaTex.texture);
+        gl.activeTexture(gl.TEXTURE0);
+
+        cubes.wireFrameCube.draw(gl, ctx.aVertexPositionId, ctx.aVertexColorId, ctx.aVertexTexCoordId);
 
         requestAnimationFrame(loop);
     }
