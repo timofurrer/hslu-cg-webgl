@@ -13,12 +13,14 @@ var gl;
 // we keep all local parameters for the program in a single object
 var ctx = {
     shaderProgram: -1, //wird unten wieder überschrieben
-    aVertexPositionId: -1
+    aVertexPositionId: -1,
+    aVertexColorId: -1,
 };
 
 // we keep all the parameters for drawing a specific object together
 var rectangleObject = {
-    buffer: -1
+    buffer: -1,
+    colorBuffer: -1,
 };
 
 /**
@@ -57,6 +59,7 @@ function setUpAttributesAndUniforms(){
     "use strict";
     // finds the index of the variable in the program || überschreibt ctx.aVertexPositionId
     ctx.aVertexPositionId = gl.getAttribLocation(ctx.shaderProgram, "aVertexPosition");
+    ctx.aVertexColorId = gl.getAttribLocation(ctx.shaderProgram, "aVertexColor");
 }
 
 /**
@@ -76,6 +79,20 @@ function setUpBuffers(){
 
     gl.bindBuffer(gl.ARRAY_BUFFER, rectangleObject.buffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+
+
+    // coloring of the rectangle
+    rectangleObject.colorBuffer = gl.createBuffer();
+
+    var color = [
+        1.0, 0.0, 0.0,
+        1.0, 0.0, 0.0,
+        1.0, 0.0, 0.0,
+        1.0, 0.0, 0.0,
+    ];
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, rectangleObject.colorBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(color), gl.STATIC_DRAW);
 }
 
 /**
@@ -90,6 +107,10 @@ function draw() {
     gl.bindBuffer(gl.ARRAY_BUFFER, rectangleObject.buffer);
     gl.vertexAttribPointer(ctx.aVertexPositionId, 2, gl.FLOAT, false, 0,0);
     gl.enableVertexAttribArray(ctx.aVertexPositionId);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, rectangleObject.colorBuffer);
+    gl.vertexAttribPointer(ctx.aVertexColorId, 3, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(ctx.aVertexColorId);
 
     gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
     console.log("done");
